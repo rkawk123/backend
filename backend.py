@@ -5,7 +5,7 @@ from PIL import Image
 import numpy as np
 import io
 import os
-import requests
+import gdown
 
 app = FastAPI()
 
@@ -17,34 +17,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 구글 드라이브 모델 파일
-import gdown
-
+# 구글 드라이브 모델
 FILE_ID = "1Java89-rJabP2jwLmQuRlYDYO8cvsWjA"
 MODEL_PATH = "my_model.h5"
-GDRIVE_URL = f"https://drive.google.com/uc?id={FILE_ID}"  # gdown 전용 URL
+GDRIVE_URL = f"https://drive.google.com/uc?id={FILE_ID}"
 
+# 모델 다운로드 (gdown만 사용)
 if not os.path.exists(MODEL_PATH):
     print("모델 다운로드 중...")
     gdown.download(GDRIVE_URL, MODEL_PATH, quiet=False)
     print("모델 다운로드 완료!")
 
-
-# 모델 다운로드
-if not os.path.exists(MODEL_PATH):
-    print("모델 다운로드 중...")
-    r = requests.get(GDRIVE_URL)
-    with open(MODEL_PATH, "wb") as f:
-        f.write(r.content)
-    print("모델 다운로드 완료!")
-
 # 모델 로드
 model = load_model(MODEL_PATH)
 
-# 클래스 이름 (모두 대문자)
+# 클래스 이름 (대문자)
 CLASS_NAMES = [
-    "ACRYLIC", "DENIM", "COTTON", "FUR", "LINEN", 
-    "NYLON", "POLYESTER", "PUFFER", "RAYON", 
+    "ACRYLIC", "DENIM", "COTTON", "FUR", "LINEN",
+    "NYLON", "POLYESTER", "PUFFER", "RAYON",
     "SLIK", "SPANDEX", "VELVET", "WOOL"
 ]
 
@@ -56,7 +46,7 @@ def root():
 async def predict(file: UploadFile = File(...)):
     contents = await file.read()
     img = Image.open(io.BytesIO(contents)).convert("RGB")
-    img = img.resize((224, 224))  # 모델 입력 크기에 맞추기
+    img = img.resize((224, 224))
     x = np.array(img) / 255.0
     x = np.expand_dims(x, axis=0)
 
@@ -75,8 +65,5 @@ async def predict(file: UploadFile = File(...)):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-
-
-
-
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
