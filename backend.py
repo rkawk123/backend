@@ -18,9 +18,9 @@ app.add_middleware(
 )
 
 # 구글 드라이브 모델 파일
-FILE_ID = "YOUR_FILE_ID"  # 여기에 공유 링크 파일 ID
+FILE_ID = "1Java89-rJabP2jwLmQuRlYDYO8cvsWjA"  # 여기에 공유 링크 파일 ID
 MODEL_PATH = "my_model.h5"
-GDRIVE_URL = f"https://drive.google.com/uc?export=download&id={FILE_ID}"
+GDRIVE_URL = f"https://drive.google.com/file/d/1Java89-rJabP2jwLmQuRlYDYO8cvsWjA/view?usp=drive_link"
 
 # 모델 다운로드
 if not os.path.exists(MODEL_PATH):
@@ -68,3 +68,4 @@ async def predict(file: UploadFile = File(...)):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
