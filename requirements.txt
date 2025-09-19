@@ -5,6 +5,7 @@ numpy
 Pillow
 tensorflow
 requests
+gdown
 
 
 
