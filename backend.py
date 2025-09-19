@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# 모든 도메인에서 호출 가능하게 설정
+# 모든 도메인에서 호출 가능
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -11,13 +11,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 연결 테스트용 메시지
 @app.get("/")
 def root():
     return {"message": "백엔드 연결 확인용 테스트 서버"}
 
+# 이미지 업로드 테스트
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
-    # 파일 이름과 크기만 반환
     contents = await file.read()
     return {
         "filename": file.filename,
@@ -27,4 +28,3 @@ async def predict(file: UploadFile = File(...)):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
