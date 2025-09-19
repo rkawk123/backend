@@ -1,16 +1,44 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from tensorflow.keras.models import load_model
+from PIL import Image
 import numpy as np
+import io
+import os
+import requests
 
 app = FastAPI()
 
-# 모든 도메인에서 호출 가능
+# CORS 허용
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 구글 드라이브 모델 파일
+FILE_ID = "YOUR_FILE_ID"  # 여기에 공유 링크 파일 ID
+MODEL_PATH = "my_model.h5"
+GDRIVE_URL = f"https://drive.google.com/uc?export=download&id={FILE_ID}"
+
+# 모델 다운로드
+if not os.path.exists(MODEL_PATH):
+    print("모델 다운로드 중...")
+    r = requests.get(GDRIVE_URL)
+    with open(MODEL_PATH, "wb") as f:
+        f.write(r.content)
+    print("모델 다운로드 완료!")
+
+# 모델 로드
+model = load_model(MODEL_PATH)
+
+# 클래스 이름 (모두 대문자)
+CLASS_NAMES = [
+    "ACRYLIC", "DENIM", "COTTON", "FUR", "LINEN", 
+    "NYLON", "POLYESTER", "PUFFER", "RAYON", 
+    "SLIK", "SPANDEX", "VELVET", "WOOL"
+]
 
 @app.get("/")
 def root():
@@ -19,9 +47,15 @@ def root():
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
     contents = await file.read()
-    label = "고양이" if np.random.rand() > 0.5 else "강아지"
-    class_index = 0 if label == "고양이" else 1
-    confidence = float(np.random.rand() * 0.5 + 0.5)
+    img = Image.open(io.BytesIO(contents)).convert("RGB")
+    img = img.resize((224, 224))  # 모델 입력 크기에 맞추기
+    x = np.array(img) / 255.0
+    x = np.expand_dims(x, axis=0)
+
+    preds = model.predict(x)
+    class_index = int(np.argmax(preds))
+    label = CLASS_NAMES[class_index]
+    confidence = float(preds[0][class_index])
 
     return {
         "filename": file.filename,
