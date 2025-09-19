@@ -5,7 +5,6 @@ from PIL import Image
 import numpy as np
 import io
 import os
-import gdown
 
 app = FastAPI()
 
@@ -17,18 +16,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 구글 드라이브 모델
-FILE_ID = "1Java89-rJabP2jwLmQuRlYDYO8cvsWjA"
-MODEL_PATH = "my_model.h5"
-GDRIVE_URL = f"https://drive.google.com/uc?id={FILE_ID}"
-
-# 모델 다운로드 (gdown만 사용)
-if not os.path.exists(MODEL_PATH):
-    print("모델 다운로드 중...")
-    gdown.download(GDRIVE_URL, MODEL_PATH, quiet=False)
-    print("모델 다운로드 완료!")
+# 모델 경로 (GitHub에서 이미 포함시킨 모델)
+MODEL_PATH = "final_model.keras"  # GitHub에서 프로젝트에 올린 경로
 
 # 모델 로드
+if not os.path.exists(MODEL_PATH):
+    raise FileNotFoundError(f"{MODEL_PATH} 파일이 존재하지 않습니다. GitHub에서 모델이 포함되어 있는지 확인하세요.")
+
 model = load_model(MODEL_PATH)
 
 # 클래스 이름 (대문자)
