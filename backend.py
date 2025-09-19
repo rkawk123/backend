@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+import numpy as np
 
 app = FastAPI()
 
@@ -11,21 +12,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 브라우저에서 바로 확인 가능
 @app.get("/")
 def root():
-    return {
-        "message": "백엔드 연결 확인 완료! 🎉",
-        "info": "GitHub Pages에서 접속해도 이 메시지가 보입니다."
-    }
+    return {"message": "백엔드 연결 확인 완료! 🎉"}
 
-# 이미지 업로드 테스트용 (선택)
 @app.post("/predict")
-async def predict(file: bytes = b""):
+async def predict(file: UploadFile = File(...)):
+    contents = await file.read()
+    label = "고양이" if np.random.rand() > 0.5 else "강아지"
+    class_index = 0 if label == "고양이" else 1
+    confidence = float(np.random.rand() * 0.5 + 0.5)
+
     return {
-        "message": "POST 요청도 정상 작동",
-        "filename": getattr(file, "filename", "테스트 이미지 없음"),
-        "size_bytes": len(file)
+        "filename": file.filename,
+        "size_bytes": len(contents),
+        "label": label,
+        "class_index": class_index,
+        "confidence": confidence
     }
 
 if __name__ == "__main__":
