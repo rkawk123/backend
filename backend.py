@@ -1,3 +1,4 @@
+"""
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from tensorflow.keras.models import load_model
@@ -61,3 +62,29 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
+"""
+
+from fastapi import FastAPI, UploadFile, File
+import uvicorn
+import os
+from model_loader import predict_fabric
+
+app = FastAPI() #fastAPI 서버 객체 생성
+os.makedirs("uploads", exist_ok=True)
+
+#/predict 엔드 포인트
+@app.post("/predict")
+async def predict(file: UploadFile = File(...)):
+    # 업로드 파일 저장
+    filepath = f"uploads/{file.filename}"
+    with open(filepath, "wb") as f:
+        f.write(await file.read())
+
+    # 모델 추론
+    results = predict_fabric(filepath)
+    return {"filename": file.filename, "predictions": results}
+
+#서버 실행
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
